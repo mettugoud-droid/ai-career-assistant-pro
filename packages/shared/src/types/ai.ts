@@ -1,0 +1,4 @@
+export enum AIProvider { OPENAI = 'OPENAI', ANTHROPIC = 'ANTHROPIC', GEMINI = 'GEMINI' }
+export enum AIAgent { RESUME_REVIEW = 'RESUME_REVIEW', ATS_OPTIMIZATION = 'ATS_OPTIMIZATION', JOB_SEARCH = 'JOB_SEARCH', COMPANY_RESEARCH = 'COMPANY_RESEARCH', COVER_LETTER = 'COVER_LETTER', INTERVIEW_COACH = 'INTERVIEW_COACH', LEARNING_COACH = 'LEARNING_COACH', CAREER_ADVISOR = 'CAREER_ADVISOR', SALARY_NEGOTIATION = 'SALARY_NEGOTIATION', APPLICATION_TRACKER = 'APPLICATION_TRACKER' }
+export enum RoadmapDuration { THIRTY_DAYS = 'THIRTY_DAYS', SIXTY_DAYS = 'SIXTY_DAYS', NINETY_DAYS = 'NINETY_DAYS' }
+export interface LearningRoadmap { id: string; userId: string; title: string; duration: RoadmapDuration; skills: any[]; weeklyPlans: any[]; resources: any[]; progress: number; }

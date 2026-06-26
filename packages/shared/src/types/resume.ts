@@ -1,0 +1,4 @@
+export enum ResumeFileType { PDF = 'PDF', DOC = 'DOC', DOCX = 'DOCX' }
+export enum ResumeCategory { GENERAL = 'GENERAL', CYBERSECURITY = 'CYBERSECURITY', SOFTWARE = 'SOFTWARE', CLOUD = 'CLOUD', DATA_SCIENCE = 'DATA_SCIENCE', AI_ML = 'AI_ML', DEVOPS = 'DEVOPS' }
+export interface ParsedResume { personalInfo: { name: string; email: string; phone?: string; linkedinUrl?: string; githubUrl?: string; }; skills: { technical: string[]; soft: string[]; tools: string[]; frameworks: string[]; }; experience: Array<{ company: string; title: string; startDate: string; endDate?: string; description: string; highlights: string[]; }>; education: Array<{ institution: string; degree: string; field: string; }>; }
+export interface ResumeIntelligence { atsScore: number; overallScore: number; strengths: string[]; weaknesses: string[]; missingKeywords: string[]; improvementSuggestions: any[]; }
