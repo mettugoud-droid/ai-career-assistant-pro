@@ -1,0 +1,4 @@
+export interface ApiResponse<T = unknown> { success: boolean; data?: T; error?: { code: string; message: string; details?: Record<string, string[]>; }; message?: string; }
+export interface PaginatedResponse<T> { data: T[]; total: number; page: number; limit: number; totalPages: number; }
+export enum NotificationType { NEW_JOB_MATCH = 'NEW_JOB_MATCH', RESUME_SCORE_CHANGE = 'RESUME_SCORE_CHANGE', INTERVIEW_SCHEDULED = 'INTERVIEW_SCHEDULED', APPLICATION_STATUS_CHANGE = 'APPLICATION_STATUS_CHANGE', LEARNING_REMINDER = 'LEARNING_REMINDER' }
+export interface DashboardStats { profileCompletion: number; resumeScore: number; atsScore: number; skillsMatch: number; totalApplications: number; activeApplications: number; interviewsScheduled: number; offersReceived: number; savedJobs: number; studyProgress: number; }

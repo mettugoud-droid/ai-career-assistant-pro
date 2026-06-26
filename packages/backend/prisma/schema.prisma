@@ -1,0 +1,366 @@
+// Prisma Schema for AI Career Assistant Pro
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  GITHUB
+  LINKEDIN
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+  REMOTE
+}
+
+enum ResumeFileType {
+  PDF
+  DOC
+  DOCX
+}
+
+enum ResumeCategory {
+  GENERAL
+  CYBERSECURITY
+  SOFTWARE
+  CLOUD
+  DATA_SCIENCE
+  AI_ML
+  DEVOPS
+}
+
+enum JobSource {
+  LINKEDIN
+  INDEED
+  GLASSDOOR
+  NAUKRI
+  REMOTE_OK
+  WEWORKREMOTELY
+  YC_JOBS
+  COMPANY_CAREER
+  OTHER
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  INTERVIEW_SCHEDULED
+  ASSESSMENT_PENDING
+  HR_ROUND
+  TECHNICAL_ROUND
+  MANAGER_ROUND
+  OFFER_RECEIVED
+  REJECTED
+  WITHDRAWN
+  ACCEPTED
+}
+
+enum ApplyMode {
+  EASY_APPLY
+  AI_APPLY
+  AUTO_APPLY
+  MANUAL
+}
+
+enum CoverLetterType {
+  PROFESSIONAL
+  ROLE_SPECIFIC
+  COMPANY_SPECIFIC
+  REFERRAL
+  COLD_EMAIL
+  RECRUITER_OUTREACH
+  LINKEDIN_MESSAGE
+  THANK_YOU
+  FOLLOW_UP
+}
+
+enum NotificationType {
+  NEW_JOB_MATCH
+  RESUME_SCORE_CHANGE
+  INTERVIEW_SCHEDULED
+  APPLICATION_STATUS_CHANGE
+  LEARNING_REMINDER
+}
+
+enum AIAgentType {
+  RESUME_REVIEW
+  ATS_OPTIMIZATION
+  JOB_SEARCH
+  COMPANY_RESEARCH
+  COVER_LETTER
+  INTERVIEW_COACH
+  LEARNING_COACH
+  CAREER_ADVISOR
+  SALARY_NEGOTIATION
+  APPLICATION_TRACKER
+}
+
+enum RoadmapDuration {
+  THIRTY_DAYS
+  SIXTY_DAYS
+  NINETY_DAYS
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id                String           @id @default(uuid())
+  email             String           @unique
+  name              String
+  passwordHash      String?
+  avatar            String?
+  role              UserRole         @default(USER)
+  provider          AuthProvider     @default(EMAIL)
+  subscriptionPlan  SubscriptionPlan @default(FREE)
+  isEmailVerified   Boolean          @default(false)
+  profileCompletion Int              @default(0)
+  lastLoginAt       DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  profile        UserProfile?
+  resumes        Resume[]
+  applications   Application[]
+  coverLetters   CoverLetter[]
+  jobMatches     JobMatch[]
+  roadmaps       LearningRoadmap[]
+  notifications  Notification[]
+  chatSessions   ChatSession[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([provider])
+  @@index([subscriptionPlan])
+}
+
+model UserProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  phone               String?
+  linkedinUrl         String?
+  githubUrl           String?
+  currentJobTitle     String?
+  yearsOfExperience   Int?
+  preferredLocations  String[]
+  preferredJobRoles   String[]
+  openToRemote        Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Resume {
+  id           String         @id @default(uuid())
+  userId       String
+  fileName     String
+  fileUrl      String
+  fileType     ResumeFileType
+  parsedData   Json?
+  atsScore     Float?
+  overallScore Float?
+  version      Int            @default(1)
+  isActive     Boolean        @default(true)
+  category     ResumeCategory @default(GENERAL)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+}
+
+model Job {
+  id             String   @id @default(uuid())
+  externalId     String
+  source         JobSource
+  title          String
+  company        String
+  location       String
+  isRemote       Boolean  @default(false)
+  jobType        JobType
+  salaryMin      Float?
+  salaryMax      Float?
+  description    String
+  skills         String[]
+  applicationUrl String
+  postedAt       DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  applications Application[]
+  coverLetters CoverLetter[]
+  jobMatches   JobMatch[]
+
+  @@unique([externalId, source])
+  @@index([source])
+  @@index([jobType])
+  @@index([isRemote])
+  @@index([postedAt])
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  userId    String
+  jobId     String
+  resumeId  String
+  status    ApplicationStatus @default(SAVED)
+  applyMode ApplyMode         @default(MANUAL)
+  notes     String?
+  appliedAt DateTime          @default(now())
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([status])
+  @@index([userId, status])
+}
+
+model CoverLetter {
+  id        String          @id @default(uuid())
+  userId    String
+  jobId     String?
+  type      CoverLetterType
+  content   String
+  tone      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job?  @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, type])
+}
+
+model JobMatch {
+  id            String   @id @default(uuid())
+  userId        String
+  jobId         String
+  matchScore    Float
+  atsMatchScore Float
+  matchedSkills String[]
+  missingSkills String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([matchScore])
+}
+
+model LearningRoadmap {
+  id          String          @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  duration    RoadmapDuration
+  skills      Json
+  weeklyPlans Json
+  resources   Json
+  progress    Float           @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  actionUrl String?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model ChatSession {
+  id        String      @id @default(uuid())
+  userId    String
+  title     String
+  agent     AIAgentType
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([agent])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String
+  content   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([sessionId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
